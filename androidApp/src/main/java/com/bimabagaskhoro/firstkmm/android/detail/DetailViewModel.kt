@@ -1,0 +1,46 @@
+package com.bimabagaskhoro.firstkmm.android.detail
+
+import android.graphics.Movie
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.setValue
+import androidx.lifecycle.ViewModel
+import androidx.lifecycle.viewModelScope
+import com.bimabagaskhoro.firstkmm.domain.model.MovieData
+import com.bimabagaskhoro.firstkmm.domain.usecase.GetMovieByIdUseCase
+import com.bimabagaskhoro.firstkmm.domain.usecase.GetMovieUseCase
+import kotlinx.coroutines.launch
+
+class DetailViewModel(
+    val getMovieUseCase: GetMovieByIdUseCase,
+    val movieId: Int
+) : ViewModel() {
+
+    var uiState by mutableStateOf(DetailScreenState())
+
+    init {
+        loadMovie(movieId)
+    }
+
+    private fun loadMovie(movieId: Int) {
+        viewModelScope.launch {
+            uiState = uiState.copy(loading = true)
+
+            uiState = try {
+                val movie = getMovieUseCase(movieId = movieId)
+                uiState.copy(loading = false, movie = movie)
+            } catch (error: Throwable) {
+                uiState.copy(
+                    loading = false,
+                    errorMessage = "Could not load the movie"
+                )
+            }
+        }
+    }
+}
+
+data class DetailScreenState(
+    var loading: Boolean = false,
+    var movie: MovieData? = null,
+    var errorMessage: String? = null
+)
